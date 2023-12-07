@@ -1,0 +1,43 @@
+{
+  "name": "surrealised",
+  "version": "0.0.1",
+  "description": "Another SurrealDB Library for NodeJS",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozone-team/surrealised.git"
+  },
+  "keywords": [
+    "surrealdb",
+    "surreal",
+    "database",
+    "orm",
+    "client"
+  ],
+  "author": "Ozone Team <hello@ozoneteam.net>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ozone-team/surrealised/issues"
+  },
+  "homepage": "https://github.com/ozone-team/surrealised#readme",
+  "dependencies": {
+    "bufferutil": "^4.0.8",
+    "node": "18",
+    "surrealdb.js": "^0.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "ts-node": "^10.9.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}
