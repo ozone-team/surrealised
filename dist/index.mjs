@@ -6,16 +6,17 @@ var SurrealClient = class {
   PASSWORD;
   NAMESPACE;
   DATABASE;
-  client;
   isDebug = false;
+  client;
+  isConnected = false;
   constructor(options) {
     var _a, _b, _c, _d, _e;
-    this.HOST = ((_a = options.connection) == null ? void 0 : _a.host) || process.env.SURREAL_DB_HOST;
-    this.USER = ((_b = options.connection) == null ? void 0 : _b.user) || process.env.SURREAL_DB_USER;
-    this.PASSWORD = ((_c = options.connection) == null ? void 0 : _c.password) || process.env.SURREAL_DB_PASSWORD;
-    this.NAMESPACE = ((_d = options.connection) == null ? void 0 : _d.namespace) || process.env.SURREAL_DB_NAMESPACE;
-    this.DATABASE = ((_e = options.connection) == null ? void 0 : _e.database) || process.env.SURREAL_DB_DATABASE;
-    this.isDebug = options.debug || false;
+    this.HOST = ((_a = options == null ? void 0 : options.connection) == null ? void 0 : _a.host) || process.env.SURREAL_DB_HOST;
+    this.USER = ((_b = options == null ? void 0 : options.connection) == null ? void 0 : _b.user) || process.env.SURREAL_DB_USER;
+    this.PASSWORD = ((_c = options == null ? void 0 : options.connection) == null ? void 0 : _c.password) || process.env.SURREAL_DB_PASSWORD;
+    this.NAMESPACE = ((_d = options == null ? void 0 : options.connection) == null ? void 0 : _d.namespace) || process.env.SURREAL_DB_NAMESPACE;
+    this.DATABASE = ((_e = options == null ? void 0 : options.connection) == null ? void 0 : _e.database) || process.env.SURREAL_DB_DATABASE;
+    this.isDebug = (options == null ? void 0 : options.debug) || process.env.SURREAL_DB_DEBUG == "true";
     if (this.isDebug) {
       console.debug("[SurrealClient] Debug mode enabled");
       console.debug("[SurrealClient] Connection", {
@@ -26,16 +27,22 @@ var SurrealClient = class {
         database: this.DATABASE
       });
     }
+  }
+  async init() {
+    if (this.isConnected && this.client)
+      return this.client;
     this.client = new Surreal({
       onConnect: () => {
         if (this.isDebug) {
           console.debug("[SurrealClient] Connected to Surreal!");
         }
+        this.isConnected = true;
       },
       onClose: () => {
         if (this.isDebug) {
           console.debug("[SurrealClient] Disconnected from Surreal!");
         }
+        this.isConnected = false;
       },
       onError: () => {
         if (this.isDebug) {
@@ -43,8 +50,6 @@ var SurrealClient = class {
         }
       }
     });
-  }
-  async init() {
     await this.client.connect(`${this.HOST}`, {
       auth: {
         username: this.USER,
@@ -57,11 +62,12 @@ var SurrealClient = class {
       namespace: this.NAMESPACE,
       database: this.DATABASE
     });
+    return this.client;
   }
-  debugMessage(...message) {
+  debugMessage(message, ...optionalParams) {
     if (!this.isDebug)
       return;
-    console.debug(message);
+    console.debug(message, ...optionalParams);
   }
   /**
    * Execute a query and return the first row.
@@ -70,13 +76,18 @@ var SurrealClient = class {
    * @param params
    */
   async queryOne(query, params) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.queryOne()] Executing query", query, "\n", params);
-    const qResult = await this.client.query(query, params);
+    const qResult = await client.query(query, params);
+    this.debugMessage("[SurrealClient.queryOne()] Query result", qResult);
     if (!qResult.length) {
       return void 0;
     }
-    return qResult[qResult.length - 1].result[0];
+    const result = qResult[qResult.length - 1];
+    if (!result.length) {
+      return void 0;
+    }
+    return result[0];
   }
   /**
    * Execute a query and return many rows.
@@ -85,13 +96,14 @@ var SurrealClient = class {
    * @param params
    */
   async queryMany(quest, params) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.queryMany()] Executing query", quest, "\n", params);
-    const qResult = await this.client.query(quest, params);
+    const qResult = await client.query(quest, params);
+    this.debugMessage("[SurrealClient.queryMany()] Query result", qResult);
     if (!qResult.length) {
       return void 0;
     }
-    return qResult[qResult.length - 1].result;
+    return qResult[qResult.length - 1];
   }
   /**
    * Create a key with value
@@ -99,9 +111,9 @@ var SurrealClient = class {
    * @param value
    */
   async create(key, value) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.create()] Creating key", key, "with value", value);
-    let [result] = await this.client.create(key, value);
+    let [result] = await client.create(key, value);
     return result;
   }
   /**
@@ -109,9 +121,9 @@ var SurrealClient = class {
    * @param key
    */
   async fetch(key) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.fetch()] Fetching key", key);
-    let [result] = await this.client.select(key);
+    let [result] = await client.select(key);
     return result;
   }
   /**
@@ -119,10 +131,9 @@ var SurrealClient = class {
    * @param {string} table
    */
   async fetchMany(table) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.fetchMany()] Fetching many keys from table", table);
-    let [result] = await this.client.select(table);
-    return result;
+    return await this.queryMany(`SELECT * FROM ${table}`);
   }
   /**
    * Update a key, will merge if it exists, otherwise will create
@@ -130,9 +141,9 @@ var SurrealClient = class {
    * @param value
    */
   async update(key, value) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.update()] Updating key", key, "with value", value);
-    let [result] = await this.client.merge(key, value);
+    let [result] = await client.merge(key, value);
     return result;
   }
   /**
@@ -140,9 +151,9 @@ var SurrealClient = class {
    * @param key
    */
   async delete(key) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.delete()] Deleting key", key);
-    let [result] = await this.client.delete(key);
+    let [result] = await client.delete(key);
     return result;
   }
   /**
@@ -151,9 +162,9 @@ var SurrealClient = class {
    * @param params
    */
   async execute(query, params) {
-    await this.init();
+    let client = await this.init();
     this.debugMessage("[SurrealClient.execute()] Executing query", query, "\n", params);
-    return await this.client.query(query, params);
+    return await client.query(query, params);
   }
 };
 export {
