@@ -1,4 +1,5 @@
 import {Surreal} from "surrealdb.js";
+import {ConnectionOptions} from "surrealdb.js/script/types";
 
 interface SurrealClientOptions {
     debug?:boolean;
@@ -27,15 +28,16 @@ export default class SurrealClient {
 
     constructor(options?:SurrealClientOptions) {
 
-        this.HOST = options?.connection?.host || process.env.SURREAL_DB_HOST;
-        this.USER = options?.connection?.user || process.env.SURREAL_DB_USER;
-        this.PASSWORD = options?.connection?.password || process.env.SURREAL_DB_PASSWORD;
-        this.NAMESPACE = options?.connection?.namespace || process.env.SURREAL_DB_NAMESPACE;
-        this.DATABASE = options?.connection?.database || process.env.SURREAL_DB_DATABASE;
+        this.HOST = options?.connection?.host || process.env.SURREAL_DB_HOST || process.env.NEXT_PUBLIC_SURREAL_DB_HOST;
+        this.USER = options?.connection?.user || process.env.SURREAL_DB_USER || process.env.NEXT_PUBLIC_SURREAL_DB_USER;
+        this.PASSWORD = options?.connection?.password || process.env.SURREAL_DB_PASSWORD || process.env.NEXT_PUBLIC_SURREAL_DB_PASSWORD;
+        this.NAMESPACE = options?.connection?.namespace || process.env.SURREAL_DB_NAMESPACE || process.env.NEXT_PUBLIC_SURREAL_DB_NAMESPACE;
+        this.DATABASE = options?.connection?.database || process.env.SURREAL_DB_DATABASE || process.env.NEXT_PUBLIC_SURREAL_DB_DATABASE;
 
-        this.isDebug = options?.debug || process.env.SURREAL_DB_DEBUG == "true";
+        this.isDebug = options?.debug || process.env.SURREAL_DB_DEBUG == "true" || process.env.NEXT_PUBLIC_SURREAL_DB_DEBUG == "true";
 
         if(this.isDebug){
+            console.debug("[SurrealClient] Version: 1.1.5")
             console.debug("[SurrealClient] Debug mode enabled");
             console.debug("[SurrealClient] Connection", {
                 host: this.HOST,
@@ -49,43 +51,35 @@ export default class SurrealClient {
 
     async init(){
 
-        if(this.isConnected && this.client) return this.client;
+        try {
+            this.client = new Surreal();
 
-        this.client = new Surreal({
-            onConnect: () => {
-                if(this.isDebug){
-                    console.debug("[SurrealClient] Connected to Surreal!")
-                }
-                this.isConnected = true;
-            },
-            onClose: () => {
-                if(this.isDebug){
-                    console.debug("[SurrealClient] Disconnected from Surreal!")
-                }
-                this.isConnected = false;
-            },
-            onError: () => {
-                if(this.isDebug){
-                    console.error("[SurrealClient] An error occurred");
-                }
+            let opts: ConnectionOptions = {
+
+                auth: {
+                    username: this.USER,
+                    password: this.PASSWORD
+                },
+                namespace: this.NAMESPACE,
+                database: this.DATABASE
             }
-        });
-        
-        await this.client.connect(`${this.HOST}`, {
-            auth: {
-                username: this.USER,
-                password: this.PASSWORD
-            },
-            namespace: this.NAMESPACE,
-            database: this.DATABASE
-        });
 
-        await this.client.use({
-            namespace: this.NAMESPACE,
-            database: this.DATABASE
-        })
+            console.debug("[SurrealClient.init()] Connecting to SurrealDB\n", {...opts, host: this.HOST})
 
-        return this.client;
+            await this.client.connect(this.HOST, opts);
+
+            console.debug("[SurrealClient.init()] Connected to SurrealDB")
+
+            await this.client.use({
+                namespace: this.NAMESPACE,
+                database: this.DATABASE
+            })
+
+            return this.client;
+        } catch (e) {
+            console.error("[SurrealClient.init()] Error connecting to SurrealDB", e);
+            throw e;
+        }
         
     }
 

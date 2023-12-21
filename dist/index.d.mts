@@ -1,4 +1,3 @@
-import * as surrealdb_js_script_types from 'surrealdb.js/script/types';
 import { Surreal } from 'surrealdb.js';
 
 interface SurrealClientOptions {
@@ -69,7 +68,7 @@ declare class SurrealClient {
      * @param query
      * @param params
      */
-    execute(query: string, params?: any): Promise<surrealdb_js_script_types.RawQueryResult[]>;
+    execute(query: string, params?: any): Promise<void>;
 }
 
 export { SurrealClient as default };
