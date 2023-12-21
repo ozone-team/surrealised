@@ -196,5 +196,23 @@ var SurrealClient = class {
     this.debugMessage("[SurrealClient.execute()] Query result", result);
     await client.close();
   }
+  /**
+   * Relate two records together using a join table
+   * @param table - The join table name (i.e. "visited")
+   * @param from - The key of the record to relate from (i.e. "user:1")
+   * @param to - The key of the record to relate to (i.e. "office:sydney")
+   * @param value - The value to store in the join table (i.e. "{visitedAt: '2021-01-01', ...}")
+   */
+  async relate(table, from, to, value) {
+    this.debugMessage("[SurrealClient.relate()] Relating", from, "to", to, "with value", value);
+    let qRelate = `RELATE ${from}->${table}->${to}`;
+    if (value) {
+      qRelate = `RELATE ${from}->${table}->${to} CONTENT $content`;
+    }
+    let client = await this.init();
+    let result = await client.query(qRelate, { content: value });
+    this.debugMessage("[SurrealClient.relate()] Relate result", result);
+    await client.close();
+  }
 };
 //# sourceMappingURL=index.js.map

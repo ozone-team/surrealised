@@ -69,6 +69,14 @@ declare class SurrealClient {
      * @param params
      */
     execute(query: string, params?: any): Promise<void>;
+    /**
+     * Relate two records together using a join table
+     * @param table - The join table name (i.e. "visited")
+     * @param from - The key of the record to relate from (i.e. "user:1")
+     * @param to - The key of the record to relate to (i.e. "office:sydney")
+     * @param value - The value to store in the join table (i.e. "{visitedAt: '2021-01-01', ...}")
+     */
+    relate(table: string, from: string, to: string, value?: Record<string, any>): Promise<void>;
 }
 
 export { SurrealClient as default };
