@@ -102,8 +102,8 @@ export default class SurrealClient {
      * @param params
      */
     async queryOne<T = any>(query:string, params?:any){
-        let client = await this.init();
         this.debugMessage("[SurrealClient.queryOne()] Executing query", query, "\n", params);
+        let client = await this.init();
 
         const qResult = await client.query<[any, any]>(query, params);
 
@@ -185,8 +185,8 @@ export default class SurrealClient {
      * @param value
      */
     async update<T = any>(key:string, value:any){
-        let client = await this.init();
         this.debugMessage("[SurrealClient.update()] Updating key", key, "with value", value);
+        let client = await this.init();
         let [result] = await client.merge<any>(key, value);
         return result as T;
     }
@@ -196,8 +196,8 @@ export default class SurrealClient {
      * @param key
      */
     async delete(key:string){
-        let client = await this.init();
         this.debugMessage("[SurrealClient.delete()] Deleting key", key);
+        let client = await this.init();
         let [result] = await client.delete<any>(key);
         return result;
     }
@@ -208,8 +208,8 @@ export default class SurrealClient {
      * @param params
      */
     async execute(query:string, params?:any){
-        let client = await this.init();
         this.debugMessage("[SurrealClient.execute()] Executing query", query, "\n", params);
+        let client = await this.init();
         return await client.query(query, params);
     }
 

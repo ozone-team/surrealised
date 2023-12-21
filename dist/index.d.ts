@@ -1,4 +1,5 @@
 import * as surrealdb_js_script_types from 'surrealdb.js/script/types';
+import { Surreal } from 'surrealdb.js';
 
 interface SurrealClientOptions {
     debug?: boolean;
@@ -16,10 +17,11 @@ declare class SurrealClient {
     private PASSWORD;
     private NAMESPACE;
     private DATABASE;
-    private client;
     private isDebug;
-    constructor(options: SurrealClientOptions);
-    init(): Promise<void>;
+    private client;
+    private isConnected;
+    constructor(options?: SurrealClientOptions);
+    init(): Promise<Surreal>;
     private debugMessage;
     /**
      * Execute a query and return the first row.
@@ -34,7 +36,7 @@ declare class SurrealClient {
      * @param quest
      * @param params
      */
-    queryMany(quest: string, params?: any): Promise<any>;
+    queryMany<T = any>(quest: string, params?: any): Promise<T[]>;
     /**
      * Create a key with value
      * @param key
@@ -45,18 +47,18 @@ declare class SurrealClient {
      * Fetch a key
      * @param key
      */
-    fetch(key: string): Promise<any>;
+    fetch<T = any>(key: string): Promise<T>;
     /**
      * Fetch many keys from {table}
      * @param {string} table
      */
-    fetchMany(table: string): Promise<any>;
+    fetchMany<T = any>(table: string): Promise<T[]>;
     /**
      * Update a key, will merge if it exists, otherwise will create
      * @param key
      * @param value
      */
-    update(key: string, value: any): Promise<any>;
+    update<T = any>(key: string, value: any): Promise<T>;
     /**
      * Delete a key
      * @param key
