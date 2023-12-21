@@ -31,6 +31,8 @@ var SurrealClient = class {
   }
   async init() {
     try {
+      if (this.client != null)
+        return this.client;
       this.client = new Surreal();
       let opts = {
         auth: {
@@ -171,7 +173,6 @@ var SurrealClient = class {
     let client = await this.init();
     let result = await client.query(query, params);
     this.debugMessage("[SurrealClient.execute()] Query result", result);
-    await client.close();
   }
   /**
    * Relate two records together using a join table
@@ -189,7 +190,31 @@ var SurrealClient = class {
     let client = await this.init();
     let result = await client.query(qRelate, { content: value });
     this.debugMessage("[SurrealClient.relate()] Relate result", result);
+  }
+  async begin(transaction) {
+    this.debugMessage("[SurrealClient.begin()] Beginning transaction", transaction);
+    let client = await this.init();
+    let result = await client.query(`BEGIN ${transaction}`);
+    this.debugMessage("[SurrealClient.begin()] Begin result", result);
+    return transaction;
+  }
+  async commit(transaction) {
+    this.debugMessage("[SurrealClient.commit()] Committing transaction", transaction);
+    let client = await this.init();
+    let result = await client.query(`COMMIT ${transaction}`);
+    this.debugMessage("[SurrealClient.commit()] Commit result", result);
+    return result;
+  }
+  async close() {
+    this.debugMessage("[SurrealClient.close()] Closing connection");
+    let client = await this.init();
     await client.close();
+    this.debugMessage("[SurrealClient.close()] Connection closed");
+  }
+  async live(table, callback) {
+    this.debugMessage("[SurrealClient.live()] Checking connection");
+    let client = await this.init();
+    await client.live(table, (d) => callback(d));
   }
 };
 export {

@@ -1,5 +1,5 @@
 import {Surreal} from "surrealdb.js";
-import {ConnectionOptions} from "surrealdb.js/script/types";
+import {ConnectionOptions, LiveQueryResponse} from "surrealdb.js/script/types";
 
 interface SurrealClientOptions {
     debug?:boolean;
@@ -52,6 +52,10 @@ export default class SurrealClient {
     async init(){
 
         try {
+
+            // If we already have a client, return it
+            if(this.client != null) return this.client;
+
             this.client = new Surreal();
 
             let opts: ConnectionOptions = {
@@ -220,7 +224,6 @@ export default class SurrealClient {
         let client = await this.init();
         let result = await client.query(query, params);
         this.debugMessage("[SurrealClient.execute()] Query result", result);
-        await client.close();
     }
 
     /**
@@ -244,9 +247,37 @@ export default class SurrealClient {
 
         this.debugMessage("[SurrealClient.relate()] Relate result", result);
 
-        await client.close();
-
     }
+
+    async begin(transaction?: string){
+        this.debugMessage("[SurrealClient.begin()] Beginning transaction", transaction);
+        let client = await this.init();
+        let result = await client.query(`BEGIN ${transaction}`);
+        this.debugMessage("[SurrealClient.begin()] Begin result", result);
+        return transaction;
+    }
+
+    async commit(transaction?: string){
+        this.debugMessage("[SurrealClient.commit()] Committing transaction", transaction);
+        let client = await this.init();
+        let result = await client.query(`COMMIT ${transaction}`);
+        this.debugMessage("[SurrealClient.commit()] Commit result", result);
+        return result;
+    }
+
+    async close(){
+        this.debugMessage("[SurrealClient.close()] Closing connection");
+        let client = await this.init();
+        await client.close();
+        this.debugMessage("[SurrealClient.close()] Connection closed");
+    }
+
+    async live(table:string, callback: (data:LiveQueryResponse<Record<string, any>>) => any){
+        this.debugMessage("[SurrealClient.live()] Checking connection");
+        let client = await this.init();
+        await client.live(table, (d) => callback(d));
+    }
+
 
 
 }
