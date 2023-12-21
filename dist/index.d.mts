@@ -24,6 +24,7 @@ declare class SurrealClient {
     constructor(options?: SurrealClientOptions);
     init(): Promise<Surreal>;
     private debugMessage;
+    connect(): Promise<void>;
     /**
      * Execute a query and return the first row.
      * If there are multiple queries, it will return the first row of the last query.
@@ -79,8 +80,8 @@ declare class SurrealClient {
      * @param value - The value to store in the join table (i.e. "{visitedAt: '2021-01-01', ...}")
      */
     relate(table: string, from: string, to: string, value?: Record<string, any>): Promise<void>;
-    begin(transaction?: string): Promise<string>;
-    commit(transaction?: string): Promise<surrealdb_js_script_types.RawQueryResult[]>;
+    begin(): Promise<void>;
+    commit(): Promise<surrealdb_js_script_types.RawQueryResult[]>;
     close(): Promise<void>;
     live(table: string, callback: (data: LiveQueryResponse<Record<string, any>>) => any): Promise<void>;
 }

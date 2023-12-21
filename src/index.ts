@@ -22,7 +22,7 @@ export default class SurrealClient {
 
     private isDebug:boolean = false;
 
-    private client:Surreal;
+    private client:Surreal|undefined = undefined;
 
     private isConnected:boolean = false;
 
@@ -47,37 +47,16 @@ export default class SurrealClient {
                 database: this.DATABASE
             })
         }
+
+        this.client = new Surreal();
+        this.debugMessage("[SurrealClient] Client created")
     }
 
     async init(){
 
         try {
 
-            // If we already have a client, return it
-            if(this.client != null) return this.client;
-
-            this.client = new Surreal();
-
-            let opts: ConnectionOptions = {
-
-                auth: {
-                    username: this.USER,
-                    password: this.PASSWORD
-                },
-                namespace: this.NAMESPACE,
-                database: this.DATABASE
-            }
-
-            console.debug("[SurrealClient.init()] Connecting to SurrealDB\n", {...opts, host: this.HOST})
-
-            await this.client.connect(this.HOST, opts);
-
-            console.debug("[SurrealClient.init()] Connected to SurrealDB")
-
-            await this.client.use({
-                namespace: this.NAMESPACE,
-                database: this.DATABASE
-            })
+            await this.connect()
 
             return this.client;
         } catch (e) {
@@ -92,6 +71,27 @@ export default class SurrealClient {
         console.debug(message, ...optionalParams);
     }
 
+    async connect(){
+        let opts: ConnectionOptions = {
+
+            auth: {
+                username: this.USER,
+                password: this.PASSWORD
+            },
+            namespace: this.NAMESPACE,
+            database: this.DATABASE
+        }
+
+        console.debug("[SurrealClient.init()] Connecting to SurrealDB\n", {...opts, host: this.HOST})
+
+        await this.client.connect(this.HOST, opts);
+        console.debug("[SurrealClient.init()] Connected to SurrealDB");
+
+        await this.client.use({
+            namespace: this.NAMESPACE,
+            database: this.DATABASE
+        })
+    }
 
     /**
      * Execute a query and return the first row.
@@ -242,25 +242,24 @@ export default class SurrealClient {
             qRelate = `RELATE ${from}->${table}->${to} CONTENT $content`;
         }
 
-        let client = await this.init();
-        let result = await client.query(qRelate, {content: value});
+
+        let result = await this.execute(qRelate, {content: value});
 
         this.debugMessage("[SurrealClient.relate()] Relate result", result);
 
     }
 
-    async begin(transaction?: string){
-        this.debugMessage("[SurrealClient.begin()] Beginning transaction", transaction);
+    async begin(){
+        this.debugMessage("[SurrealClient.begin()] Beginning transaction");
         let client = await this.init();
-        let result = await client.query(`BEGIN ${transaction}`);
+        let result = await client.query(`BEGIN TRANSACTION;`);
         this.debugMessage("[SurrealClient.begin()] Begin result", result);
-        return transaction;
     }
 
-    async commit(transaction?: string){
-        this.debugMessage("[SurrealClient.commit()] Committing transaction", transaction);
+    async commit(){
+        this.debugMessage("[SurrealClient.commit()] Committing transaction");
         let client = await this.init();
-        let result = await client.query(`COMMIT ${transaction}`);
+        let result = await client.query(`COMMIT TRANSACTION;`);
         this.debugMessage("[SurrealClient.commit()] Commit result", result);
         return result;
     }
