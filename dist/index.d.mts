@@ -29,7 +29,7 @@ declare class SurrealClient {
      * @param query
      * @param params
      */
-    queryOne<T = any>(query: string, params?: any): Promise<T>;
+    queryOne<T = any>(query: string, params?: any): Promise<any>;
     /**
      * Execute a query and return many rows.
      * If there are multiple queries, it will return the results of the last query.

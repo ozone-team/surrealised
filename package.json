@@ -1,6 +1,6 @@
 {
   "name": "surrealised",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Another SurrealDB Library for NodeJS",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

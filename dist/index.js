@@ -99,14 +99,17 @@ var SurrealClient = class {
    * @param params
    */
   async queryOne(query, params) {
-    let client = await this.init();
     this.debugMessage("[SurrealClient.queryOne()] Executing query", query, "\n", params);
+    let client = await this.init();
     const qResult = await client.query(query, params);
     this.debugMessage("[SurrealClient.queryOne()] Query result", qResult);
     if (!qResult.length) {
       return void 0;
     }
     const result = qResult[qResult.length - 1];
+    if (!Array.isArray(result)) {
+      return result;
+    }
     if (!result.length) {
       return void 0;
     }
@@ -164,8 +167,8 @@ var SurrealClient = class {
    * @param value
    */
   async update(key, value) {
-    let client = await this.init();
     this.debugMessage("[SurrealClient.update()] Updating key", key, "with value", value);
+    let client = await this.init();
     let [result] = await client.merge(key, value);
     return result;
   }
@@ -174,8 +177,8 @@ var SurrealClient = class {
    * @param key
    */
   async delete(key) {
-    let client = await this.init();
     this.debugMessage("[SurrealClient.delete()] Deleting key", key);
+    let client = await this.init();
     let [result] = await client.delete(key);
     return result;
   }
@@ -185,8 +188,8 @@ var SurrealClient = class {
    * @param params
    */
   async execute(query, params) {
-    let client = await this.init();
     this.debugMessage("[SurrealClient.execute()] Executing query", query, "\n", params);
+    let client = await this.init();
     return await client.query(query, params);
   }
 };

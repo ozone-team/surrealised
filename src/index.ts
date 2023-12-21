@@ -106,7 +106,7 @@ export default class SurrealClient {
         let client = await this.init();
 
         const qResult = await client.query<[any, any]>(query, params);
-
+        await client.close();
         this.debugMessage("[SurrealClient.queryOne()] Query result", qResult);
 
         if(!qResult.length){
@@ -115,6 +115,9 @@ export default class SurrealClient {
 
         const result = qResult[qResult.length - 1]
 
+        if(!Array.isArray(result)){
+            return result
+        }
 
 
         if(!result.length){
@@ -136,12 +139,14 @@ export default class SurrealClient {
         this.debugMessage("[SurrealClient.queryMany()] Executing query", quest, "\n", params);
 
         const qResult = await client.query<[any,any]>(quest, params);
-
+        await client.close();
         this.debugMessage("[SurrealClient.queryMany()] Query result", qResult);
 
         if(!qResult.length){
             return undefined;
         }
+
+
 
         return qResult[qResult.length - 1] as T[];
     }
@@ -155,6 +160,7 @@ export default class SurrealClient {
         let client = await this.init();
         this.debugMessage("[SurrealClient.create()] Creating key", key, "with value", value);
         let [result] = await client.create<any>(key, value);
+        await client.close();
         return result as T;
     }
 
@@ -166,6 +172,7 @@ export default class SurrealClient {
         let client = await this.init();
         this.debugMessage("[SurrealClient.fetch()] Fetching key", key);
         let [result] = await client.select<any>(key);
+        await client.close();
         return result as T;
     }
 
@@ -176,7 +183,9 @@ export default class SurrealClient {
     async fetchMany<T = any>(table:string){
         let client = await this.init();
         this.debugMessage("[SurrealClient.fetchMany()] Fetching many keys from table", table);
-        return await this.queryMany<T>(`SELECT * FROM ${table}`)
+        var results = await this.queryMany<T>(`SELECT * FROM ${table}`)
+        await client.close();
+        return results as T[];
     }
 
     /**
@@ -188,6 +197,7 @@ export default class SurrealClient {
         this.debugMessage("[SurrealClient.update()] Updating key", key, "with value", value);
         let client = await this.init();
         let [result] = await client.merge<any>(key, value);
+        await client.close();
         return result as T;
     }
 
@@ -199,6 +209,7 @@ export default class SurrealClient {
         this.debugMessage("[SurrealClient.delete()] Deleting key", key);
         let client = await this.init();
         let [result] = await client.delete<any>(key);
+        await client.close();
         return result;
     }
 
@@ -210,6 +221,7 @@ export default class SurrealClient {
     async execute(query:string, params?:any){
         this.debugMessage("[SurrealClient.execute()] Executing query", query, "\n", params);
         let client = await this.init();
+        await client.close();
         return await client.query(query, params);
     }
 
