@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "lib": [ "es2015", "dom" ],
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "esModuleInterop": true
   }
 }
