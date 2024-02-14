@@ -114,7 +114,7 @@ export default class SurrealClient {
         const result = qResult[qResult.length - 1]
 
         if(!Array.isArray(result)){
-            return result
+            return result as T
         }
 
 
