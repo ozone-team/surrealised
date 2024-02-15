@@ -2,6 +2,43 @@ import * as surrealdb_js_script_types from 'surrealdb.js/script/types';
 import { LiveQueryResponse } from 'surrealdb.js/script/types';
 import { Surreal } from 'surrealdb.js';
 
+interface OrderByField {
+    field: string;
+    direction?: "ASC" | "DESC";
+}
+declare class SurrealQueryBuilder {
+    private table;
+    private fields;
+    private omitFields;
+    private whereClauses;
+    private currentClauseGroup;
+    private orderByFields;
+    private grouping;
+    private fetchItems;
+    private splitItems;
+    private groupByItems;
+    private withIndex;
+    private offsetClause?;
+    private limitClause?;
+    constructor(table: string);
+    select(...fields: string[]): this;
+    where(condition: string): this;
+    and(condition: string): this;
+    or(condition: string): this;
+    endGroup(): this;
+    fetch(...fields: string[]): this;
+    offset(n: number): this;
+    limit(n: number): this;
+    groupBy(...fields: string[]): this;
+    orderBy(...fields: OrderByField[]): this;
+    split(...fields: string[]): this;
+    index(...indexes: string[]): this;
+    build(): string;
+    queryOne<T>(params: Record<string, any>): Promise<T>;
+    queryMany<T>(params: Record<string, any>): Promise<T[]>;
+    execute(params: Record<string, any>): Promise<void>;
+}
+
 interface SurrealClientOptions {
     debug?: boolean;
     connection?: {
@@ -31,7 +68,7 @@ declare class SurrealClient {
      * @param query
      * @param params
      */
-    queryOne<T = any>(query: string, params?: any): Promise<any>;
+    queryOne<T = any>(query: string, params?: any): Promise<T>;
     /**
      * Execute a query and return many rows.
      * If there are multiple queries, it will return the results of the last query.
@@ -85,5 +122,6 @@ declare class SurrealClient {
     close(): Promise<void>;
     live(table: string, callback: (data: LiveQueryResponse<Record<string, any>>) => any): Promise<void>;
 }
+declare const surrealQueryBuilder: typeof SurrealQueryBuilder;
 
-export { SurrealClient as default };
+export { SurrealClient as default, surrealQueryBuilder };

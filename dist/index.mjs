@@ -1,5 +1,137 @@
 // src/index.ts
 import { Surreal } from "surrealdb.js";
+
+// src/SurrealQueryBuilder.ts
+var SurrealQueryBuilder = class {
+  table;
+  fields = [];
+  omitFields = [];
+  whereClauses = [];
+  currentClauseGroup = [];
+  orderByFields = [];
+  grouping = false;
+  fetchItems = [];
+  splitItems = [];
+  groupByItems = [];
+  withIndex = [];
+  offsetClause = 0;
+  limitClause = void 0;
+  constructor(table) {
+    this.table = table;
+  }
+  select(...fields) {
+    this.fields = fields;
+    return this;
+  }
+  where(condition) {
+    if (this.grouping) {
+      this.currentClauseGroup.push(condition);
+    } else {
+      this.whereClauses.push(condition);
+    }
+    return this;
+  }
+  and(condition) {
+    return this.where(condition);
+  }
+  or(condition) {
+    if (this.grouping) {
+      const groupedConditions = this.currentClauseGroup.join(" AND ");
+      this.whereClauses.push(`(${groupedConditions})`);
+      this.currentClauseGroup = [];
+    }
+    this.grouping = true;
+    this.currentClauseGroup.push(condition);
+    return this;
+  }
+  endGroup() {
+    if (this.grouping && this.currentClauseGroup.length > 0) {
+      const groupedConditions = this.currentClauseGroup.join(" AND ");
+      this.whereClauses.push(`(${groupedConditions})`);
+      this.grouping = false;
+      this.currentClauseGroup = [];
+    }
+    return this;
+  }
+  fetch(...fields) {
+    this.fetchItems = fields;
+    return this;
+  }
+  offset(n) {
+    this.offsetClause = n;
+    return this;
+  }
+  limit(n) {
+    this.limitClause = n;
+    return this;
+  }
+  groupBy(...fields) {
+    this.groupByItems = fields;
+    return this;
+  }
+  orderBy(...fields) {
+    this.orderByFields = fields;
+    return this;
+  }
+  split(...fields) {
+    this.splitItems = fields;
+    return this;
+  }
+  index(...indexes) {
+    this.withIndex = indexes;
+    return this;
+  }
+  build() {
+    let query = `SELECT ${this.fields.length > 0 ? this.fields.join(", ") : "*"}`;
+    if (this.omitFields.length) {
+      query += ` OMIT ${this.omitFields.join(", ")}`;
+    }
+    query += ` FROM ${this.table}`;
+    if (this.withIndex.length) {
+      query += `WITH INDEX ${this.withIndex.join(", ")}`;
+    }
+    if (this.whereClauses.length > 0) {
+      query += ` WHERE ${this.whereClauses.join(" OR ")}`;
+    }
+    if (this.splitItems.length > 0) {
+      query += ` SPLIT ${this.splitItems.join(", ")}`;
+    }
+    if (this.groupByItems.length > 0) {
+      query += ` GROUP BY ${this.groupByItems.join(", ")}`;
+    }
+    if (this.orderByFields.length > 0) {
+      query += ` ORDER BY ${this.orderByFields.map((f) => `${f.field} ${f.direction || "ASC"}`).join(", ")}`;
+    }
+    if (this.limitClause) {
+      query += ` LIMIT ${this.limitClause}`;
+    }
+    if (this.offsetClause) {
+      query += ` START ${this.offsetClause}`;
+    }
+    if (this.fetchItems.length > 0) {
+      query += ` FETCH ${this.fetchItems.join(", ")}`;
+    }
+    return query;
+  }
+  async queryOne(params) {
+    let q = this.build();
+    const surreal = new SurrealClient();
+    return await surreal.queryOne(q, params);
+  }
+  async queryMany(params) {
+    let q = this.build();
+    const surreal = new SurrealClient();
+    return await surreal.queryMany(q, params);
+  }
+  async execute(params) {
+    let q = this.build();
+    const surreal = new SurrealClient();
+    return await surreal.execute(q, params);
+  }
+};
+var SurrealQueryBuilder_default = SurrealQueryBuilder;
+
+// src/index.ts
 var SurrealClient = class {
   HOST;
   USER;
@@ -217,7 +349,9 @@ var SurrealClient = class {
     await client.live(table, (d) => callback(d));
   }
 };
+var surrealQueryBuilder = SurrealQueryBuilder_default;
 export {
-  SurrealClient as default
+  SurrealClient as default,
+  surrealQueryBuilder
 };
 //# sourceMappingURL=index.mjs.map

@@ -1,5 +1,6 @@
 import {Surreal} from "surrealdb.js";
 import {ConnectionOptions, LiveQueryResponse} from "surrealdb.js/script/types";
+import SurrealQueryBuilder from "./SurrealQueryBuilder";
 
 interface SurrealClientOptions {
     debug?:boolean;
@@ -278,6 +279,7 @@ export default class SurrealClient {
     }
 
 
-
 }
 
+
+export const surrealQueryBuilder = SurrealQueryBuilder;
