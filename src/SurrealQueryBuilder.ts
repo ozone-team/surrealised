@@ -5,7 +5,7 @@ interface OrderByField {
     direction?: "ASC" | "DESC";
 }
 
-export class SurrealQueryBuilder {
+class SurrealQueryBuilder {
     private table: string;
     private fields: string[] = [];
     private omitFields: string[] = [];
@@ -26,11 +26,21 @@ export class SurrealQueryBuilder {
         this.table = table;
     }
 
+    /**
+     * Select fields to return
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#basic-usage
+     * @param fields
+     */
     select(...fields: string[]): this {
         this.fields = fields;
         return this;
     }
 
+    /**
+     * Start a condition, MUST be present before any AND or OR statements
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#filter-queries-using-the-where-clause
+     * @param condition
+     */
     where(condition: string): this {
         if (this.grouping) {
             this.currentClauseGroup.push(condition);
@@ -40,10 +50,20 @@ export class SurrealQueryBuilder {
         return this;
     }
 
+    /**
+     * Add conditions to the query
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+     * @param condition
+     */
     and(condition: string): this {
         return this.where(condition);
     }
 
+    /**
+     * Or what?
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+     * @param condition
+     */
     or(condition: string): this {
         if (this.grouping) {
             const groupedConditions = this.currentClauseGroup.join(' AND ');
@@ -66,41 +86,80 @@ export class SurrealQueryBuilder {
         return this;
     }
 
+    /**
+     * Specify record joins to fetch the details of
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+     * @param fields
+     */
     fetch(...fields: string[]): this {
         this.fetchItems = fields;
         return this;
     }
 
+    /**
+     * Offset the results by a number
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-limit-clause
+     * @param n
+     */
     offset(n: number){
         this.offsetClause = n;
         return this;
     }
 
+    /**
+     * Limit the number of results
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-limit-clause
+     * @param n - the number to limit it to
+     */
     limit(n: number){
         this.limitClause = n;
         return this;
     }
 
+    /**
+     * Group the results by a field or set of fields
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-group-by-and-group-all-clause
+     * @param fields
+     */
     groupBy(...fields: string[]): this {
         this.groupByItems = fields;
         return this;
     }
 
+
+    /**
+     * Order the results by a set of fields
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#sort-records-using-the-order-by-clause
+     * @param fields
+     */
     orderBy(...fields: OrderByField[]){
         this.orderByFields = fields;
         return this;
     }
 
+    /**
+     * Split the query results via a field
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-split-clause
+     * @param fields
+     */
     split(...fields: string[]): this {
         this.splitItems = fields;
         return this;
     }
 
+    /**
+     * Add indexes to the query
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-with-clause
+     * @param indexes
+     */
     index(...indexes: string[]): this {
         this.withIndex = indexes;
         return this;
     }
 
+    /**
+     * Construct the query string
+     */
     build(): string {
         let query = `SELECT ${this.fields.length > 0 ? this.fields.join(', ') : '*'}`;
 
@@ -138,22 +197,24 @@ export class SurrealQueryBuilder {
         return query;
     }
 
+    /**
+     * Execute the query and return a single row (or none)
+     * @param params
+     */
     async queryOne<T>(params: Record<string, any>): Promise<T> {
         let q = this.build();
         const surreal = new SurrealClient();
         return await surreal.queryOne<T>(q, params);
     }
 
+    /**
+     * Execute the query and return many rows
+     * @param params
+     */
     async queryMany<T>(params: Record<string, any>): Promise<T[]> {
         let q = this.build();
         const surreal = new SurrealClient();
         return await surreal.queryMany<T>(q, params);
-    }
-
-    async execute(params: Record<string, any>): Promise<void> {
-        let q = this.build();
-        const surreal = new SurrealClient();
-        return await surreal.execute(q, params);
     }
 }
 

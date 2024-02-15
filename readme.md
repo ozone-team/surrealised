@@ -145,3 +145,169 @@ module.exports = surrealClient;
 const surrealClient = require('./surrealClient');
 let users = surrealClient.queryMany<User>('SELECT * FROM users');
 ```
+
+---
+
+# SurrealQueryBuilder Usage Guide
+
+The `SurrealQueryBuilder` class provides a fluent interface for constructing and executing queries against a SurrealDB database. This guide will walk you through the instantiation of the query builder and the use of its major functions.
+
+## Instantiation
+
+To create a new instance of the `SurrealQueryBuilder`, you need to provide the name of the table you'll be querying:
+
+```javascript
+const query = new SurrealQueryBuilder("table_name");
+```
+
+## Major Functions
+
+### select(...fields: string[])
+
+Selects fields to return from the query. If no fields are specified, `*` is used to select all fields.
+
+**Example:**
+
+```javascript
+query.select("id", "name", "age");
+```
+
+### where(condition: string)
+
+Starts a condition. Must be present before any `AND` or `OR` statements. Adds a condition to the `WHERE` clause of the query.
+
+**Example:**
+
+```javascript
+query.where("age > 18");
+```
+
+### and(condition: string)
+
+Adds an `AND` condition to the query. It's essentially an alias to the `where` method for chaining conditions.
+
+**Example:**
+
+```javascript
+query.where("age > 18").and("active = true");
+```
+
+### or(condition: string)
+
+Starts a new condition group with an `OR` operator. Useful for grouping conditions together.
+
+**Example:**
+
+```javascript
+query.where("age < 18").or("guardian_approved = true");
+```
+
+### endGroup()
+
+Ends a condition group started with `or`. Necessary to close the grouping of conditions.
+
+**Example:**
+
+```javascript
+query.where("age < 18").or("guardian_approved = true").endGroup();
+```
+
+### fetch(...fields: string[])
+
+Specifies record joins to fetch details of related records.
+
+**Example:**
+
+```javascript
+query.fetch("profile", "contacts");
+```
+
+### offset(n: number)
+
+Offsets the results by a specified number, for pagination.
+
+**Example:**
+
+```javascript
+query.offset(10);
+```
+
+### limit(n: number)
+
+Limits the number of results returned by the query.
+
+**Example:**
+
+```javascript
+query.limit(5);
+```
+
+### groupBy(...fields: string[])
+
+Groups the results by one or more fields.
+
+**Example:**
+
+```javascript
+query.groupBy("department");
+```
+
+### orderBy(...fields: OrderByField[])
+
+Orders the results by one or more fields, with optional direction (`ASC` or `DESC`).
+
+**Example:**
+
+```javascript
+query.orderBy({ field: "name", direction: "ASC" });
+```
+
+### split(...fields: string[])
+
+Splits the query results by specified fields.
+
+**Example:**
+
+```javascript
+query.split("category");
+```
+
+### index(...indexes: string[])
+
+Adds indexes to the query to optimize its execution.
+
+**Example:**
+
+```javascript
+query.index("index_on_name");
+```
+
+### build(): string
+
+Constructs and returns the query string based on the specified parameters.
+
+**Example:**
+
+```javascript
+const queryString = query.build();
+```
+
+### queryOne<T>(params: Record<string, any>)
+
+Executes the query and returns a single row or none. It requires a parameter object for any placeholders within the query.
+
+**Example:**
+
+```javascript
+query.select("id", "name").where("id = $id").queryOne<{ id: string, name: string }>({ id: "someId" });
+```
+
+### queryMany<T>(params: Record<string, any>)
+
+Executes the query and returns many rows. Similar to `queryOne`, but for retrieving multiple records.
+
+**Example:**
+
+```javascript
+query.select("id", "name").where("active = true").queryMany<{ id: string, name: string }>({});
+```
