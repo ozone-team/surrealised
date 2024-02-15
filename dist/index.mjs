@@ -19,10 +19,20 @@ var SurrealQueryBuilder = class {
   constructor(table) {
     this.table = table;
   }
+  /**
+   * Select fields to return
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#basic-usage
+   * @param fields
+   */
   select(...fields) {
     this.fields = fields;
     return this;
   }
+  /**
+   * Start a condition, MUST be present before any AND or OR statements
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#filter-queries-using-the-where-clause
+   * @param condition
+   */
   where(condition) {
     if (this.grouping) {
       this.currentClauseGroup.push(condition);
@@ -31,9 +41,19 @@ var SurrealQueryBuilder = class {
     }
     return this;
   }
+  /**
+   * Add conditions to the query
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+   * @param condition
+   */
   and(condition) {
     return this.where(condition);
   }
+  /**
+   * Or what?
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+   * @param condition
+   */
   or(condition) {
     if (this.grouping) {
       const groupedConditions = this.currentClauseGroup.join(" AND ");
@@ -53,35 +73,82 @@ var SurrealQueryBuilder = class {
     }
     return this;
   }
+  /**
+   * Specify record joins to fetch the details of
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+   * @param fields
+   */
   fetch(...fields) {
     this.fetchItems = fields;
     return this;
   }
+  /**
+   * Offset the results by a number
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#the-limit-clause
+   * @param n
+   */
   offset(n) {
     this.offsetClause = n;
     return this;
   }
+  /**
+   * Limit the number of results
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#the-limit-clause
+   * @param n - the number to limit it to
+   */
   limit(n) {
     this.limitClause = n;
     return this;
   }
+  /**
+   * Group the results by a field or set of fields
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#the-group-by-and-group-all-clause
+   * @param fields
+   */
   groupBy(...fields) {
     this.groupByItems = fields;
     return this;
   }
+  /**
+   * Order the results by a set of fields
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#sort-records-using-the-order-by-clause
+   * @param fields
+   */
   orderBy(...fields) {
     this.orderByFields = fields;
     return this;
   }
+  /**
+   * Split the query results via a field
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#the-split-clause
+   * @param fields
+   */
   split(...fields) {
     this.splitItems = fields;
     return this;
   }
+  /**
+   * Add indexes to the query
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#the-with-clause
+   * @param indexes
+   */
   index(...indexes) {
     this.withIndex = indexes;
     return this;
   }
+  assertClauseGroup() {
+    if (this.grouping && this.currentClauseGroup.length > 0) {
+      const groupedConditions = this.currentClauseGroup.join(" AND ");
+      this.whereClauses.push(`(${groupedConditions})`);
+      this.grouping = false;
+      this.currentClauseGroup = [];
+    }
+  }
+  /**
+   * Construct the query string
+   */
   build() {
+    this.assertClauseGroup();
     let query = `SELECT ${this.fields.length > 0 ? this.fields.join(", ") : "*"}`;
     if (this.omitFields.length) {
       query += ` OMIT ${this.omitFields.join(", ")}`;
@@ -113,20 +180,23 @@ var SurrealQueryBuilder = class {
     }
     return query;
   }
+  /**
+   * Execute the query and return a single row (or none)
+   * @param params
+   */
   async queryOne(params) {
     let q = this.build();
     const surreal = new SurrealClient();
     return await surreal.queryOne(q, params);
   }
+  /**
+   * Execute the query and return many rows
+   * @param params
+   */
   async queryMany(params) {
     let q = this.build();
     const surreal = new SurrealClient();
     return await surreal.queryMany(q, params);
-  }
-  async execute(params) {
-    let q = this.build();
-    const surreal = new SurrealClient();
-    return await surreal.execute(q, params);
   }
 };
 var SurrealQueryBuilder_default = SurrealQueryBuilder;
@@ -349,9 +419,9 @@ var SurrealClient = class {
     await client.live(table, (d) => callback(d));
   }
 };
-var surrealQueryBuilder = SurrealQueryBuilder_default;
+var SurrealQueryBuilder2 = SurrealQueryBuilder_default;
 export {
-  SurrealClient as default,
-  surrealQueryBuilder
+  SurrealQueryBuilder2 as SurrealQueryBuilder,
+  SurrealClient as default
 };
 //# sourceMappingURL=index.mjs.map

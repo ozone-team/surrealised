@@ -157,10 +157,22 @@ class SurrealQueryBuilder {
         return this;
     }
 
+    private assertClauseGroup(){
+        if(this.grouping && this.currentClauseGroup.length > 0){
+            const groupedConditions = this.currentClauseGroup.join(' AND ');
+            this.whereClauses.push(`(${groupedConditions})`);
+            this.grouping = false;
+            this.currentClauseGroup = [];
+        }
+    }
+
     /**
      * Construct the query string
      */
     build(): string {
+
+        this.assertClauseGroup();
+
         let query = `SELECT ${this.fields.length > 0 ? this.fields.join(', ') : '*'}`;
 
         if(this.omitFields.length){

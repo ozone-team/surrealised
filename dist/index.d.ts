@@ -6,7 +6,7 @@ interface OrderByField {
     field: string;
     direction?: "ASC" | "DESC";
 }
-declare class SurrealQueryBuilder {
+declare class SurrealQueryBuilder$1 {
     private table;
     private fields;
     private omitFields;
@@ -21,22 +21,88 @@ declare class SurrealQueryBuilder {
     private offsetClause?;
     private limitClause?;
     constructor(table: string);
+    /**
+     * Select fields to return
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#basic-usage
+     * @param fields
+     */
     select(...fields: string[]): this;
+    /**
+     * Start a condition, MUST be present before any AND or OR statements
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#filter-queries-using-the-where-clause
+     * @param condition
+     */
     where(condition: string): this;
+    /**
+     * Add conditions to the query
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+     * @param condition
+     */
     and(condition: string): this;
+    /**
+     * Or what?
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+     * @param condition
+     */
     or(condition: string): this;
     endGroup(): this;
+    /**
+     * Specify record joins to fetch the details of
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#connect-targets-using-the-fetch-clause
+     * @param fields
+     */
     fetch(...fields: string[]): this;
+    /**
+     * Offset the results by a number
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-limit-clause
+     * @param n
+     */
     offset(n: number): this;
+    /**
+     * Limit the number of results
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-limit-clause
+     * @param n - the number to limit it to
+     */
     limit(n: number): this;
+    /**
+     * Group the results by a field or set of fields
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-group-by-and-group-all-clause
+     * @param fields
+     */
     groupBy(...fields: string[]): this;
+    /**
+     * Order the results by a set of fields
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#sort-records-using-the-order-by-clause
+     * @param fields
+     */
     orderBy(...fields: OrderByField[]): this;
+    /**
+     * Split the query results via a field
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-split-clause
+     * @param fields
+     */
     split(...fields: string[]): this;
+    /**
+     * Add indexes to the query
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-with-clause
+     * @param indexes
+     */
     index(...indexes: string[]): this;
+    private assertClauseGroup;
+    /**
+     * Construct the query string
+     */
     build(): string;
+    /**
+     * Execute the query and return a single row (or none)
+     * @param params
+     */
     queryOne<T>(params: Record<string, any>): Promise<T>;
+    /**
+     * Execute the query and return many rows
+     * @param params
+     */
     queryMany<T>(params: Record<string, any>): Promise<T[]>;
-    execute(params: Record<string, any>): Promise<void>;
 }
 
 interface SurrealClientOptions {
@@ -122,6 +188,6 @@ declare class SurrealClient {
     close(): Promise<void>;
     live(table: string, callback: (data: LiveQueryResponse<Record<string, any>>) => any): Promise<void>;
 }
-declare const surrealQueryBuilder: typeof SurrealQueryBuilder;
+declare const SurrealQueryBuilder: typeof SurrealQueryBuilder$1;
 
-export { SurrealClient as default, surrealQueryBuilder };
+export { SurrealQueryBuilder, SurrealClient as default };
