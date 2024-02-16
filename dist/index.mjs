@@ -158,7 +158,7 @@ var SurrealQueryBuilder = class {
       query += `WITH INDEX ${this.withIndex.join(", ")}`;
     }
     if (this.whereClauses.length > 0) {
-      query += ` WHERE ${this.whereClauses.join(" OR ")}`;
+      query += ` WHERE ${this.whereClauses.join(" AND ")}`;
     }
     if (this.splitItems.length > 0) {
       query += ` SPLIT ${this.splitItems.join(", ")}`;
