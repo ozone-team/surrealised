@@ -280,9 +280,9 @@ var SurrealClient = class {
       namespace: this.NAMESPACE,
       database: this.DATABASE
     };
-    console.debug("[SurrealClient.init()] Connecting to SurrealDB\n", { ...opts, host: this.HOST });
+    this.debugMessage("[SurrealClient.init()] Connecting to SurrealDB\n", { ...opts, host: this.HOST });
     await this.client.connect(this.HOST, opts);
-    console.debug("[SurrealClient.init()] Connected to SurrealDB");
+    this.debugMessage("[SurrealClient.init()] Connected to SurrealDB");
     await this.client.use({
       namespace: this.NAMESPACE,
       database: this.DATABASE
