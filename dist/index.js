@@ -33,6 +33,7 @@ var SurrealQueryBuilder = class {
   whereClauses = [];
   currentClauseGroup = [];
   orderByFields = [];
+  isInWhereClause = false;
   grouping = false;
   fetchItems = [];
   splitItems = [];
@@ -58,11 +59,11 @@ var SurrealQueryBuilder = class {
    * @param condition
    */
   where(condition) {
-    if (this.grouping) {
-      this.currentClauseGroup.push(condition);
-    } else {
-      this.whereClauses.push(condition);
+    if (this.isInWhereClause) {
+      this.endGroup();
     }
+    this.currentClauseGroup.push(condition);
+    this.isInWhereClause = true;
     return this;
   }
   /**
@@ -71,6 +72,7 @@ var SurrealQueryBuilder = class {
    * @param condition
    */
   and(condition) {
+    console.debug("AND", condition);
     return this.where(condition);
   }
   /**
@@ -79,18 +81,15 @@ var SurrealQueryBuilder = class {
    * @param condition
    */
   or(condition) {
-    if (this.grouping) {
-      const groupedConditions = this.currentClauseGroup.join(" AND ");
-      this.whereClauses.push(`(${groupedConditions})`);
-      this.currentClauseGroup = [];
+    if (!this.isInWhereClause) {
+      throw new Error("You must call where() before calling or()");
     }
-    this.grouping = true;
     this.currentClauseGroup.push(condition);
     return this;
   }
   endGroup() {
-    if (this.grouping && this.currentClauseGroup.length > 0) {
-      const groupedConditions = this.currentClauseGroup.join(" AND ");
+    if (this.currentClauseGroup.length > 0) {
+      const groupedConditions = this.currentClauseGroup.join(" OR ");
       this.whereClauses.push(`(${groupedConditions})`);
       this.grouping = false;
       this.currentClauseGroup = [];
@@ -161,12 +160,10 @@ var SurrealQueryBuilder = class {
     return this;
   }
   assertClauseGroup() {
-    if (this.grouping && this.currentClauseGroup.length > 0) {
-      const groupedConditions = this.currentClauseGroup.join(" AND ");
-      this.whereClauses.push(`(${groupedConditions})`);
-      this.grouping = false;
-      this.currentClauseGroup = [];
+    if (this.isInWhereClause) {
+      this.endGroup();
     }
+    console.log(this.whereClauses);
   }
   /**
    * Construct the query string

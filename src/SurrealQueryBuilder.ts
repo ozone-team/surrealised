@@ -14,6 +14,8 @@ class SurrealQueryBuilder {
 
     private orderByFields: OrderByField[] = [];
 
+    private isInWhereClause: boolean = false;
+
     private grouping: boolean = false;
     private fetchItems: string[] = [];
     private splitItems: string[] = [];
@@ -42,11 +44,14 @@ class SurrealQueryBuilder {
      * @param condition
      */
     where(condition: string): this {
-        if (this.grouping) {
-            this.currentClauseGroup.push(condition);
-        } else {
-            this.whereClauses.push(condition);
+
+        if(this.isInWhereClause){
+            this.endGroup();
         }
+
+        this.currentClauseGroup.push(condition);
+        this.isInWhereClause = true;
+
         return this;
     }
 
@@ -56,6 +61,7 @@ class SurrealQueryBuilder {
      * @param condition
      */
     and(condition: string): this {
+        console.debug("AND", condition);
         return this.where(condition);
     }
 
@@ -65,20 +71,19 @@ class SurrealQueryBuilder {
      * @param condition
      */
     or(condition: string): this {
-        if (this.grouping) {
-            const groupedConditions = this.currentClauseGroup.join(' AND ');
-            this.whereClauses.push(`(${groupedConditions})`);
-            this.currentClauseGroup = []; // Reset for the next grouping
+
+        if(!this.isInWhereClause){
+            throw new Error("You must call where() before calling or()");
         }
 
-        this.grouping = true; // Start new grouping
         this.currentClauseGroup.push(condition);
+
         return this;
     }
 
     endGroup(): this {
-        if (this.grouping && this.currentClauseGroup.length > 0) {
-            const groupedConditions = this.currentClauseGroup.join(' AND ');
+        if (this.currentClauseGroup.length > 0) {
+            const groupedConditions = this.currentClauseGroup.join(' OR ');
             this.whereClauses.push(`(${groupedConditions})`);
             this.grouping = false;
             this.currentClauseGroup = [];
@@ -158,12 +163,11 @@ class SurrealQueryBuilder {
     }
 
     private assertClauseGroup(){
-        if(this.grouping && this.currentClauseGroup.length > 0){
-            const groupedConditions = this.currentClauseGroup.join(' AND ');
-            this.whereClauses.push(`(${groupedConditions})`);
-            this.grouping = false;
-            this.currentClauseGroup = [];
+        if(this.isInWhereClause){
+            this.endGroup();
         }
+
+        console.log(this.whereClauses);
     }
 
     /**

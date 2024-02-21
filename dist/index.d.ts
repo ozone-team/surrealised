@@ -13,6 +13,7 @@ declare class SurrealQueryBuilder$1 {
     private whereClauses;
     private currentClauseGroup;
     private orderByFields;
+    private isInWhereClause;
     private grouping;
     private fetchItems;
     private splitItems;
