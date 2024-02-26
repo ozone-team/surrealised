@@ -188,7 +188,11 @@ var SurrealQueryBuilder = class {
       query += ` GROUP BY ${this.groupByItems.join(", ")}`;
     }
     if (this.orderByFields.length > 0) {
-      query += ` ORDER BY ${this.orderByFields.map((f) => `${f.field} ${f.direction || "ASC"}`).join(", ")}`;
+      query += ` ORDER BY ${this.orderByFields.map((f) => {
+        let key = Object.keys(f)[0];
+        let value = f[key];
+        return `${key} ${value}`;
+      }).join(", ")}`;
     }
     if (this.limitClause) {
       query += ` LIMIT ${this.limitClause}`;
