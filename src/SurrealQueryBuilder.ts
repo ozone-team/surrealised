@@ -159,6 +159,15 @@ class SurrealQueryBuilder {
         return this;
     }
 
+    /**
+     * Omit fields from the result, these are still used in conditionals (I think?)
+     * @param fields
+     */
+    omit(...fields: string[]): this {
+        this.omitFields = fields;
+        return this;
+    }
+
     private assertClauseGroup(){
         if(this.isInWhereClause){
             this.endGroup();
