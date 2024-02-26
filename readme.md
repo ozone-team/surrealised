@@ -1,8 +1,20 @@
 # Surrealised
 
-## Description
+<table>
+    <tbody>
+        <tr>
+            <td>
+                <img alt="NPM Downloads" src="https://img.shields.io/npm/dt/surrealised">
+            </td>
+            <td>
+                <img alt="NPM Version" src="https://img.shields.io/npm/v/surrealised">
+            </td>
+        </tr>
+    </tbody>
+</table>
 
-A basic SurrealDB Client Library for NodeJS.
+A basic SurrealDB Server-Side Client Library for NodeJS. It acts more akin to tranditional database connections, and is designed to be used in a similar way to other SQL libraries.
+If you have any problems, or suggestions, please [open an issue](https://github.com/ozone-team/surrealised/issues). 
 
 ## Installation
 
