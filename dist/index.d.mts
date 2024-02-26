@@ -2,10 +2,7 @@ import * as surrealdb_js_script_types from 'surrealdb.js/script/types';
 import { LiveQueryResponse } from 'surrealdb.js/script/types';
 import { Surreal } from 'surrealdb.js';
 
-interface OrderByField {
-    field: string;
-    direction?: "ASC" | "DESC";
-}
+type OrderByField = Record<string, "ASC" | "DESC">;
 declare class SurrealQueryBuilder$1 {
     private table;
     private fields;

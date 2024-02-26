@@ -1,9 +1,6 @@
 import SurrealClient from "./index";
 
-interface OrderByField {
-    field: string;
-    direction?: "ASC" | "DESC";
-}
+type OrderByField = Record<string, "ASC" | "DESC">
 
 class SurrealQueryBuilder {
     private table: string;
