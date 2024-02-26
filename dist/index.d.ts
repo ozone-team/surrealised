@@ -86,6 +86,11 @@ declare class SurrealQueryBuilder$1 {
      * @param indexes
      */
     index(...indexes: string[]): this;
+    /**
+     * Omit fields from the result, these are still used in conditionals (I think?)
+     * @param fields
+     */
+    omit(...fields: string[]): this;
     private assertClauseGroup;
     /**
      * Construct the query string
