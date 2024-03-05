@@ -195,6 +195,13 @@ class SurrealQueryBuilder {
             query += `WITH INDEX ${this.withIndex.join(', ')}`;
         }
         if (this.whereClauses.length > 0) {
+
+            // if there are no OR clauses, we need to remove all the brackets
+            let hasORClauses = this.whereClauses.some((c) => c.includes(' OR '));
+            if(!hasORClauses){
+                this.whereClauses = this.whereClauses.map((c) => c.replace(/\(/g, '').replace(/\)/g, ''));
+            }
+
             query += ` WHERE ${this.whereClauses.join(' AND ')}`;
         }
         if(this.splitItems.length > 0){
