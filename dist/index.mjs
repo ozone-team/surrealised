@@ -17,6 +17,7 @@ var SurrealQueryBuilder = class {
   withIndex = [];
   offsetClause = 0;
   limitClause = void 0;
+  variables = {};
   constructor(table) {
     this.table = table;
   }
@@ -199,8 +200,12 @@ var SurrealQueryBuilder = class {
    */
   async queryOne(params) {
     let q = this.build();
+    let variables = {
+      ...this.variables,
+      ...params
+    };
     const surreal = new SurrealClient();
-    return await surreal.queryOne(q, params);
+    return await surreal.queryOne(q, variables);
   }
   /**
    * Execute the query and return many rows
@@ -209,7 +214,35 @@ var SurrealQueryBuilder = class {
   async queryMany(params) {
     let q = this.build();
     const surreal = new SurrealClient();
-    return await surreal.queryMany(q, params);
+    let variables = {
+      ...this.variables,
+      ...params
+    };
+    return await surreal.queryMany(q, variables);
+  }
+  /**
+   * Add a variable to the query for execution.
+   * @param key
+   * @param value
+   */
+  addVariable(key, value) {
+    this.variables[key] = value;
+    return this;
+  }
+  /**
+   * Remove a variable from the query
+   * @param key
+   */
+  removeVariable(key) {
+    delete this.variables[key];
+    return this;
+  }
+  /**
+   * Clear all variables from the query
+   */
+  clearVariables() {
+    this.variables = {};
+    return this;
   }
 };
 var SurrealQueryBuilder_default = SurrealQueryBuilder;

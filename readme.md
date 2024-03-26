@@ -306,7 +306,7 @@ const queryString = query.build();
 
 ### queryOne<T>(params: Record<string, any>)
 
-Executes the query and returns a single row or none. It requires a parameter object for any placeholders within the query.
+Executes the query and returns a single row or none. It can take a parameter object for any variables within the query.
 
 **Example:**
 
@@ -321,5 +321,44 @@ Executes the query and returns many rows. Similar to `queryOne`, but for retriev
 **Example:**
 
 ```javascript
-query.select("id", "name").where("active = true").queryMany<{ id: string, name: string }>({});
+query.select("id", "name").where("active = true").queryMany<{ id: string, name: string }>();
 ```
+## Variables
+
+You can access the `variables` dictionary directly to modify, remove or add variables to the query.
+
+```javascript
+query.variables = {
+    user: "user:123456",
+    date: new Date(),
+    count: 10
+}
+```
+I have also included some helper functions to make this easier:
+
+### addVariable(key: string, value: any)
+
+Add a variable to be passed to the query. If the variable already exists, it will be overwritten.
+
+```javascript
+query.addVariable("user", "user:123456")
+//... other operations
+query.where('created_by = $user')
+```
+
+### removeVariable(key: string)
+
+Remove a variable from the query.
+
+```javascript
+query.removeVariable("user")
+```
+
+### clearVariables()
+
+Clear all variables from the query.
+
+```javascript
+query.clearVariables()
+```
+

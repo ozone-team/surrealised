@@ -21,6 +21,8 @@ class SurrealQueryBuilder {
     private offsetClause?: number = 0;
     private limitClause?: number = undefined;
 
+    public variables: Record<string, any> = {};
+
     constructor(table: string) {
         this.table = table;
     }
@@ -234,21 +236,61 @@ class SurrealQueryBuilder {
      * Execute the query and return a single row (or none)
      * @param params
      */
-    async queryOne<T>(params: Record<string, any>): Promise<T> {
+    async queryOne<T>(params?: Record<string, any>): Promise<T> {
         let q = this.build();
+
+        let variables = {
+            ...this.variables,
+            ...params,
+        }
+
         const surreal = new SurrealClient();
-        return await surreal.queryOne<T>(q, params);
+        return await surreal.queryOne<T>(q, variables);
     }
 
     /**
      * Execute the query and return many rows
      * @param params
      */
-    async queryMany<T>(params: Record<string, any>): Promise<T[]> {
+    async queryMany<T>(params?: Record<string, any>): Promise<T[]> {
         let q = this.build();
         const surreal = new SurrealClient();
-        return await surreal.queryMany<T>(q, params);
+
+        let variables = {
+            ...this.variables,
+            ...params,
+        }
+
+        return await surreal.queryMany<T>(q, variables);
     }
+
+    /**
+     * Add a variable to the query for execution.
+     * @param key
+     * @param value
+     */
+    addVariable(key: string, value: any){
+        this.variables[key] = value;
+        return this;
+    }
+
+    /**
+     * Remove a variable from the query
+     * @param key
+     */
+    removeVariable(key: string){
+        delete this.variables[key];
+        return this;
+    }
+
+    /**
+     * Clear all variables from the query
+     */
+    clearVariables(){
+        this.variables = {};
+        return this;
+    }
+
 }
 
 export default SurrealQueryBuilder;

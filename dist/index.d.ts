@@ -18,6 +18,7 @@ declare class SurrealQueryBuilder$1 {
     private withIndex;
     private offsetClause?;
     private limitClause?;
+    variables: Record<string, any>;
     constructor(table: string);
     /**
      * Select fields to return
@@ -100,12 +101,27 @@ declare class SurrealQueryBuilder$1 {
      * Execute the query and return a single row (or none)
      * @param params
      */
-    queryOne<T>(params: Record<string, any>): Promise<T>;
+    queryOne<T>(params?: Record<string, any>): Promise<T>;
     /**
      * Execute the query and return many rows
      * @param params
      */
-    queryMany<T>(params: Record<string, any>): Promise<T[]>;
+    queryMany<T>(params?: Record<string, any>): Promise<T[]>;
+    /**
+     * Add a variable to the query for execution.
+     * @param key
+     * @param value
+     */
+    addVariable(key: string, value: any): this;
+    /**
+     * Remove a variable from the query
+     * @param key
+     */
+    removeVariable(key: string): this;
+    /**
+     * Clear all variables from the query
+     */
+    clearVariables(): this;
 }
 
 interface SurrealClientOptions {
