@@ -264,6 +264,16 @@ Groups the results by one or more fields.
 query.groupBy("department");
 ```
 
+### groupAll()
+
+Groups by all fields
+
+**Example:**
+
+```javascript
+query.groupAll();
+```
+
 ### orderBy(...fields: OrderByField[])
 
 Orders the results by one or more fields, with optional direction (`ASC` or `DESC`).
