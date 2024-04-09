@@ -8,6 +8,7 @@ class SurrealQueryBuilder {
     private omitFields: string[] = [];
     private whereClauses: string[] = [];
     private currentClauseGroup: string[] = [];
+    private group_all: boolean = false;
 
     private orderByFields: OrderByField[] = [];
 
@@ -130,6 +131,14 @@ class SurrealQueryBuilder {
         return this;
     }
 
+    /**
+     * Group all results
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-group-by-and-group-all-clause
+     */
+    groupAll(): this {
+        this.group_all = true;
+        return this;
+    }
 
     /**
      * Order the results by a set of fields
@@ -209,9 +218,13 @@ class SurrealQueryBuilder {
         if(this.splitItems.length > 0){
             query += ` SPLIT ${this.splitItems.join(', ')}`;
         }
-        if(this.groupByItems.length > 0){
+
+        if(this.group_all){
+            query += ` GROUP ALL`;
+        } else if(this.groupByItems.length > 0){
             query += ` GROUP BY ${this.groupByItems.join(', ')}`;
         }
+
         if(this.orderByFields.length > 0){
             query += ` ORDER BY ${this.orderByFields.map((f) => {
                 let key = Object.keys(f)[0];
@@ -219,6 +232,7 @@ class SurrealQueryBuilder {
                 return `${key} ${value}`;
             }).join(', ')}`;
         }
+
         if(this.limitClause){
             query += ` LIMIT ${this.limitClause}`;
         }
