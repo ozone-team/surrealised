@@ -8,6 +8,7 @@ var SurrealQueryBuilder = class {
   omitFields = [];
   whereClauses = [];
   currentClauseGroup = [];
+  group_all = false;
   orderByFields = [];
   isInWhereClause = false;
   grouping = false;
@@ -110,6 +111,14 @@ var SurrealQueryBuilder = class {
     return this;
   }
   /**
+   * Group all results
+   * https://docs.surrealdb.com/docs/surrealql/statements/select#the-group-by-and-group-all-clause
+   */
+  groupAll() {
+    this.group_all = true;
+    return this;
+  }
+  /**
    * Order the results by a set of fields
    * https://docs.surrealdb.com/docs/surrealql/statements/select#sort-records-using-the-order-by-clause
    * @param fields
@@ -153,7 +162,7 @@ var SurrealQueryBuilder = class {
   /**
    * Construct the query string
    */
-  build() {
+  build(ignore_pagination, ignore_filters) {
     this.assertClauseGroup();
     let query = `SELECT ${this.fields.length > 0 ? this.fields.join(", ") : "*"}`;
     if (this.omitFields.length) {
@@ -163,7 +172,7 @@ var SurrealQueryBuilder = class {
     if (this.withIndex.length) {
       query += `WITH INDEX ${this.withIndex.join(", ")}`;
     }
-    if (this.whereClauses.length > 0) {
+    if (this.whereClauses.length > 0 && !ignore_filters) {
       let hasORClauses = this.whereClauses.some((c) => c.includes(" OR "));
       if (!hasORClauses) {
         this.whereClauses = this.whereClauses.map((c) => c.replace(/\(/g, "").replace(/\)/g, ""));
@@ -173,7 +182,9 @@ var SurrealQueryBuilder = class {
     if (this.splitItems.length > 0) {
       query += ` SPLIT ${this.splitItems.join(", ")}`;
     }
-    if (this.groupByItems.length > 0) {
+    if (this.group_all) {
+      query += ` GROUP ALL`;
+    } else if (this.groupByItems.length > 0) {
       query += ` GROUP BY ${this.groupByItems.join(", ")}`;
     }
     if (this.orderByFields.length > 0) {
@@ -183,10 +194,10 @@ var SurrealQueryBuilder = class {
         return `${key} ${value}`;
       }).join(", ")}`;
     }
-    if (this.limitClause) {
+    if (this.limitClause && !ignore_pagination) {
       query += ` LIMIT ${this.limitClause}`;
     }
-    if (this.offsetClause) {
+    if (this.offsetClause && !ignore_pagination) {
       query += ` START ${this.offsetClause}`;
     }
     if (this.fetchItems.length > 0) {
@@ -243,6 +254,16 @@ var SurrealQueryBuilder = class {
   clearVariables() {
     this.variables = {};
     return this;
+  }
+  /**
+   * Get the total number of rows that would be returned by the query, by default this ignore pagination
+   * @param ignoreFilter - ignore WHERE clauses
+   */
+  async total(ignoreFilter = false) {
+    let query = this.build(true, ignoreFilter);
+    const surreal = new SurrealClient();
+    let result = await surreal.queryMany(query, this.variables);
+    return result.length;
   }
 };
 var SurrealQueryBuilder_default = SurrealQueryBuilder;

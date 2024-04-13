@@ -190,7 +190,7 @@ class SurrealQueryBuilder {
     /**
      * Construct the query string
      */
-    build(): string {
+    build(ignore_pagination?: boolean, ignore_filters?: boolean): string {
 
         this.assertClauseGroup();
 
@@ -205,7 +205,8 @@ class SurrealQueryBuilder {
         if(this.withIndex.length){
             query += `WITH INDEX ${this.withIndex.join(', ')}`;
         }
-        if (this.whereClauses.length > 0) {
+
+        if (this.whereClauses.length > 0 && !ignore_filters) {
 
             // if there are no OR clauses, we need to remove all the brackets
             let hasORClauses = this.whereClauses.some((c) => c.includes(' OR '));
@@ -233,10 +234,10 @@ class SurrealQueryBuilder {
             }).join(', ')}`;
         }
 
-        if(this.limitClause){
+        if(this.limitClause && !ignore_pagination){
             query += ` LIMIT ${this.limitClause}`;
         }
-        if(this.offsetClause){
+        if(this.offsetClause && !ignore_pagination){
             query += ` START ${this.offsetClause}`;
         }
         if(this.fetchItems.length > 0){
@@ -303,6 +304,19 @@ class SurrealQueryBuilder {
     clearVariables(){
         this.variables = {};
         return this;
+    }
+
+    /**
+     * Get the total number of rows that would be returned by the query, by default this ignore pagination
+     * @param ignoreFilter - ignore WHERE clauses
+     */
+    async total(ignoreFilter: boolean = false){
+
+        let query = this.build(true, ignoreFilter);
+        const surreal = new SurrealClient();
+
+        let result = await surreal.queryMany(query, this.variables);
+        return result.length;
     }
 
 }

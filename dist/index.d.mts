@@ -9,6 +9,7 @@ declare class SurrealQueryBuilder$1 {
     private omitFields;
     private whereClauses;
     private currentClauseGroup;
+    private group_all;
     private orderByFields;
     private isInWhereClause;
     private grouping;
@@ -70,6 +71,11 @@ declare class SurrealQueryBuilder$1 {
      */
     groupBy(...fields: string[]): this;
     /**
+     * Group all results
+     * https://docs.surrealdb.com/docs/surrealql/statements/select#the-group-by-and-group-all-clause
+     */
+    groupAll(): this;
+    /**
      * Order the results by a set of fields
      * https://docs.surrealdb.com/docs/surrealql/statements/select#sort-records-using-the-order-by-clause
      * @param fields
@@ -96,7 +102,7 @@ declare class SurrealQueryBuilder$1 {
     /**
      * Construct the query string
      */
-    build(): string;
+    build(ignore_pagination?: boolean, ignore_filters?: boolean): string;
     /**
      * Execute the query and return a single row (or none)
      * @param params
@@ -122,6 +128,11 @@ declare class SurrealQueryBuilder$1 {
      * Clear all variables from the query
      */
     clearVariables(): this;
+    /**
+     * Get the total number of rows that would be returned by the query, by default this ignore pagination
+     * @param ignoreFilter - ignore WHERE clauses
+     */
+    total(ignoreFilter?: boolean): Promise<number>;
 }
 
 interface SurrealClientOptions {
